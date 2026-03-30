@@ -1,0 +1,68 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# molecule files
+*.hdf5
+
+# script files
+script/
+
+# Virtual environments
+.venv/
+venv/
+env/
+*.env
+
+# VSCode settings
+.vscode/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+*.pyc
+outputs/*
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# PyCharm project files
+.idea/
+
+# macOS system files
+.DS_Store
+*pyscf.chk
+*pyscf.log
+*metadata.json
+debug.py
+nohup.out

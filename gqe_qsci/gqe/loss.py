@@ -1,0 +1,102 @@
+from abc import ABC, abstractmethod
+
+import torch
+from torch.nn import functional as F
+
+class Loss(ABC):
+    @abstractmethod
+    def __call__(self, **kwargs) -> torch.Tensor:
+        """Compute and return a scalar tensor."""
+
+    def validate_context(self, context: dict) -> None:
+        missing_keys = self.required_keys - set(context.keys())
+        if missing_keys:
+            raise ValueError(
+                f"{self.__class__.__name__} requires context keys: {sorted(missing_keys)}, "
+                f"but received: {sorted(context.keys())}"
+            )
+    
+class GroupRelativeLoss(Loss):
+    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28):
+        self.required_keys = {"gate_seqs", "energies", "old_log_probs"}
+        self.clip_low = clip_low
+        self.clip_high = clip_high
+        self.lowest_energy_id = None
+    
+    def __call__(self):
+        pass
+
+    def calc_advantage(self, energies):
+        return (energies.mean() - energies) / (energies.std() + 1e-8)
+
+    def calc_log_propability(self, gate_seqs, gate_logits, inverse_temperature):
+        log_probs = torch.gather(
+            F.log_softmax(-inverse_temperature * gate_logits, dim=-1),
+            2,
+            gate_seqs.unsqueeze(-1)
+        ).squeeze(-1)
+        return log_probs
+    
+
+class GRPOLoss(GroupRelativeLoss):
+    """Generalized-RPO / clipped-PPO variant used in the original code."""
+    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28, nll_topk: int = 3):
+        super().__init__(clip_low, clip_high, nll_topk)
+
+    def __call__(self, gate_logits, context):
+        """
+        Compute the loss for the given gate logits and context.
+        Args:
+            gate_logits (torch.Tensor): The logits for the generated gates. (batch, seq_len)
+        """
+        self.validate_context(context)
+        current_log_probs = gate_logits
+
+        # nagative log likelihood loss
+        win_id = torch.argmin(context["energies"])
+        log_prob_mean_win = torch.mean(current_log_probs[win_id])
+        loss = -log_prob_mean_win
+        
+        # If all the generated circuits are identical, we use the inverse log probability as the loss.
+        if torch.std(context["energies"]) == 0:
+            return -log_prob_mean_win
+        
+        advantages = self.calc_advantage(context["energies"])
+        old_log_probs = context["old_log_probs"]
+        ratio = torch.exp(current_log_probs - old_log_probs)
+        clipped_ratio = torch.clamp(ratio, 1.-self.clip_low, 1.+self.clip_high)
+
+        clipped = (clipped_ratio * advantages.unsqueeze(1)).mean()
+        unclipped = (ratio * advantages.unsqueeze(1)).mean()
+        loss -= min(clipped, unclipped)
+        return loss
+
+
+class GSPOLoss(GroupRelativeLoss):
+    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28, nll_topk: int = 3):
+        super().__init__(clip_low, clip_high, nll_topk)
+
+    def __call__(self, gate_logits, context):
+        self.validate_context(context)
+        current_token_log_probs = gate_logits
+        current_seq_log_probs = current_token_log_probs.sum(dim=1)
+
+        # nagative log likelihood loss
+        topk = torch.topk(-context["energies"], k=self.nll_topk).indices
+        w = torch.softmax(-context["energies"][topk], dim=0).detach()
+        loss = -(w[:, None] * current_token_log_probs[topk]).mean()
+
+        # If all the generated circuits are identical, we use the inverse log probability as the loss.
+        if torch.std(context["energies"]) == 0:
+            return loss
+
+        advantages = self.calc_advantage(context["energies"])
+        seqence_length = context["gate_seqs"].shape[1]
+        old_seq_log_probs = context["old_log_probs"].sum(dim=1)
+        ratio = torch.exp((current_seq_log_probs - old_seq_log_probs) / seqence_length)
+        clipped_ratio = torch.clamp(ratio, 1.-self.clip_low, 1.+self.clip_high)
+
+        clipped = (clipped_ratio * advantages).mean()
+        unclipped = (ratio * advantages).mean()
+        loss -= min(clipped, unclipped)
+        return loss

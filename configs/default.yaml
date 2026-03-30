@@ -1,0 +1,42 @@
+project: 
+  name: gqe-for-qsci
+exp_tag: default-${now:%Y-%m-%d-%H-%M-%S}
+output: outputs/${project.name}/${exp_tag}
+
+hydra:
+  run:
+    dir: ${output}
+  output_subdir: hydra
+
+wandb: 
+  project: ${project.name}
+  name: ${exp_tag}
+  dir: ${output}
+
+ngates: 10
+reference_keys: ["R-CASCI", "R-CCSD"]
+
+sampler:
+  mpi: false
+  shots: 100_000
+
+operator_pool:
+  spec: "pauli_evolution" # or "excitation"
+  params: null  # if null, use ccsd amplitudes as parameters
+  ccsd_threshold: 1e-6
+  remove_z_ladder: true
+  only_use_first_pauli: true
+
+qsci:
+  max_dim: 2000
+  enlarge_method: "symmetry_completion"
+  max_cycle: 1000
+  eigsh_kwargs: {"tol": 1e-14, "maxiter": 5000}
+
+defaults:
+  - model: gpt2
+  - molecule: n2
+  - trainer: default
+  - _self_
+
+vocab_size: 0 # Dummy, will be overwritten in factory.py
