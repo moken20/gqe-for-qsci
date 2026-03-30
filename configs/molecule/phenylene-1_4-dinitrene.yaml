@@ -1,4 +1,4 @@
-_target_: gqe_sqd.molecule.PySCFMolecule
+_target_: gqe_qsci.molecule.PySCFMolecule
 geometry: 
   type: custom
   geometry: [

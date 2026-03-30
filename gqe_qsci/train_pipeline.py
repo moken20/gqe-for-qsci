@@ -5,7 +5,7 @@ import random
 import pytorch_lightning as pl
 
 from gqe_qsci.gqe.buffer import ReplayBuffer, BufferDataset
-from gqe_qsci.qsci.schema import SQDSampleResult
+from gqe_qsci.qsci.schema import QSCISampleResult
 from gqe_qsci.qsci.pipeline import as_scivector
 
 
@@ -15,16 +15,16 @@ class TrainPipeline(pl.LightningModule):
         self.config = config
         self.factory = factory
         self.loss_fn = self.factory.create_loss_fn(config)
-        self.sqd_pipeline = self.factory.create_sqd_pipeline(config)
+        self.qsci_pipeline = self.factory.create_qsci_pipeline(config)
         self.model = self.factory.create_model(config)
         self.scheduler = self.factory.create_temperature_scheduler(self.config)
         self.metric_logger = self.factory.create_wandb_logger(config)
         self.warmup_size = config.trainer.warmup_size
         self.ngates = config.ngates
         self.num_samples = config.trainer.num_samples
-        self.best_sample: SQDSampleResult | None = None
-        self.best_local_refined: SQDSampleResult | None = None
-        self.best_global_refined: SQDSampleResult | None = None
+        self.best_sample: QSCISampleResult | None = None
+        self.best_local_refined: QSCISampleResult | None = None
+        self.best_global_refined: QSCISampleResult | None = None
         self.buffer = ReplayBuffer(size=config.trainer.buffer_size)
 
     def on_fit_start(self):
@@ -33,12 +33,12 @@ class TrainPipeline(pl.LightningModule):
         super().on_fit_start()
 
     def on_train_epoch_start(self):
-        sqd_result = self.collect_rollout(log=True)
+        qsci_result = self.collect_rollout(log=True)
         log_inputs = [
             {"result": self.best_sample, "prefix": "GQE-optimized(best_so_far)"},
             {"result": self.best_local_refined, "prefix": "Local-refined(best_so_far)"},
             {"result": self.best_global_refined, "prefix": "Global-refined(best_so_far)"},
-            {"result": sqd_result, "prefix": "GQE-optimized"},
+            {"result": qsci_result, "prefix": "GQE-optimized"},
         ]
         self.metric_logger.log_result(self, log_inputs)
         super().on_train_epoch_start()
@@ -61,8 +61,8 @@ class TrainPipeline(pl.LightningModule):
                 )
                 state = self.update_state(state, next_tokens)
 
-            sqd_result = self.sqd_pipeline.process(state)
-            energies = torch.tensor(sqd_result.energies, device=self.device)
+            qsci_result = self.qsci_pipeline.process(state)
+            energies = torch.tensor(qsci_result.energies, device=self.device)
             
             # log-probs under the behavior policy at rollout time
             old_log_probs = self.model.log_prob(
@@ -75,14 +75,14 @@ class TrainPipeline(pl.LightningModule):
                     olp.detach().cpu(),
                 )
             if self.best_sample is None or energies.min() < self.best_sample.energy:
-                self.best_sample = sqd_result.best_sample
-            if self.best_local_refined is None or sqd_result.local_refined.energy < self.best_local_refined.energy:
-                self.best_local_refined = sqd_result.local_refined
-            if self.best_global_refined is None or sqd_result.global_refined.energy < self.best_global_refined.energy:
-                self.best_global_refined = sqd_result.global_refined
+                self.best_sample = qsci_result.best_sample
+            if self.best_local_refined is None or qsci_result.local_refined.energy < self.best_local_refined.energy:
+                self.best_local_refined = qsci_result.local_refined
+            if self.best_global_refined is None or qsci_result.global_refined.energy < self.best_global_refined.energy:
+                self.best_global_refined = qsci_result.global_refined
 
         self.scheduler.update(energies=energies)
-        return sqd_result
+        return qsci_result
 
 
     def training_step(self, batch, _):
@@ -133,7 +133,7 @@ class TrainPipeline(pl.LightningModule):
         return {"optimizer": optimizer}
 
     def on_save_checkpoint(self, checkpoint):
-        scistate = self.sqd_pipeline.global_refined_scistates
+        scistate = self.qsci_pipeline.global_refined_scistates
         scistate_data = {
             "coeffs": np.asarray(scistate),
             "strs": getattr(scistate, "_strs", None)
@@ -155,7 +155,7 @@ class TrainPipeline(pl.LightningModule):
             self.best_local_refined = extra_info["best_local_refined"]
         if "global_refined_scistates" in extra_info:
             data = extra_info["global_refined_scistates"]
-            self.sqd_pipeline.global_refined_scistates = as_scivector(data["coeffs"], data["strs"])
+            self.qsci_pipeline.global_refined_scistates = as_scivector(data["coeffs"], data["strs"])
         self.buffer.load(f"{self.config.output}/buffer.pkl")
 
     def set_seed(self, seed: int):
