@@ -41,7 +41,7 @@ python train.py molecule=n2 trainer.epochs=200
 By default (`configs/default.yaml`), outputs are written to:
 - **Output dir**: `outputs/${project.name}/${exp_tag}`
 - **Checkpoint**: `.../models/last.ckpt` (loaded if present)
-- **Replay buffer**: `.../replay_buffer.pkl`
+- **Replay buffer**: `.../buffer.pkl`
 - **W&B run id**: `.../run_id` (re-running in the same directory resumes with `resume='allow'`)
 
 To resume:
