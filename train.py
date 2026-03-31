@@ -26,7 +26,7 @@ def setup_callbacks(cfg):
             monitor="epoch",
             mode="max",
             save_last=True,
-            every_n_epochs=cfg.trainer.checkpoint_every_n_steps,
+            every_n_epochs=cfg.trainer.checkpoint_every_n_iters,
             enable_version_counter=False
         ),
     ]

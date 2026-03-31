@@ -40,8 +40,8 @@ class GroupRelativeLoss(Loss):
 
 class GRPOLoss(GroupRelativeLoss):
     """Generalized-RPO / clipped-PPO variant used in the original code."""
-    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28, nll_topk: int = 3):
-        super().__init__(clip_low, clip_high, nll_topk)
+    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28):
+        super().__init__(clip_low, clip_high)
 
     def __call__(self, gate_logits, context):
         """
@@ -73,8 +73,8 @@ class GRPOLoss(GroupRelativeLoss):
 
 
 class GSPOLoss(GroupRelativeLoss):
-    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28, nll_topk: int = 3):
-        super().__init__(clip_low, clip_high, nll_topk)
+    def __init__(self, clip_low: float = 0.2, clip_high: float = 0.28):
+        super().__init__(clip_low, clip_high)
 
     def __call__(self, gate_logits, context):
         self.validate_context(context)

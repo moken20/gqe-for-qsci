@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 from scipy.linalg import eigh as scipy_eigh
 import pyci
 
-from gqe_qsci.qsci.pipeline import SCIVector
+from gqe_qsci.qsci.statevector import SCIVector
 
 
 class GEVPSolver:

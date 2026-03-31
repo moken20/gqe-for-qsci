@@ -28,6 +28,9 @@ class TrainPipeline(pl.LightningModule):
         self.buffer = ReplayBuffer(size=config.trainer.buffer_size)
 
     def on_fit_start(self):
+        run = self.logger.experiment
+        run.define_metric("epoch")
+        run.define_metric("*", step_metric="epoch")
         while len(self.buffer) < self.warmup_size:
             self.collect_rollout(log=False)
         super().on_fit_start()
@@ -35,11 +38,13 @@ class TrainPipeline(pl.LightningModule):
     def on_train_epoch_start(self):
         qsci_result = self.collect_rollout(log=True)
         log_inputs = [
-            {"result": self.best_sample, "prefix": "GQE-optimized(best_so_far)"},
-            {"result": self.best_local_refined, "prefix": "Local-refined(best_so_far)"},
-            {"result": self.best_global_refined, "prefix": "Global-refined(best_so_far)"},
             {"result": qsci_result, "prefix": "GQE-optimized"},
+            {"result": self.best_sample, "prefix": "GQE-optimized(best_so_far)"},
         ]
+        if self.best_local_refined is not None:
+            log_inputs.append({"result": self.best_local_refined, "prefix": "Local-refined(best_so_far)"})
+        if self.best_global_refined is not None:
+            log_inputs.append({"result": self.best_global_refined, "prefix": "Global-refined(best_so_far)"})
         self.metric_logger.log_result(self, log_inputs)
         super().on_train_epoch_start()
     

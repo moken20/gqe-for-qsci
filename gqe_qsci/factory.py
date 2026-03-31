@@ -87,6 +87,5 @@ class Factory:
             max_dim=cfg.qsci.max_dim,
             enlarge_method=cfg.qsci.enlarge_method,
             max_cycle=cfg.qsci.max_cycle,
-            diagonalize_backend=cfg.qsci.diagonalize_backend,
             eigsh_kwargs=cfg.qsci.eigsh_kwargs,
         )

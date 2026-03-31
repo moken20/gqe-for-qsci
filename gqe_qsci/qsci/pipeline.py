@@ -9,18 +9,7 @@ from gqe_qsci.gqe.operator_pool import OperatorPool
 from gqe_qsci.qsci.schema import QSCIResult, QSCISampleResult
 from gqe_qsci.qsci.subspace import DeterminantSubspace
 from gqe_qsci.qsci.refine.pipeline import RefinePipeline
-
-
-class SCIVector(np.ndarray):
-    def __array_finalize__(self, obj):
-        self._strs = getattr(obj, "_strs", None)
-
-
-def as_scivector(coeffs, strs) -> SCIVector:
-    scivec = np.asarray(coeffs).view(SCIVector)
-    scivec._strs = np.asarray(strs, dtype=np.uint64)
-    return scivec
-
+from gqe_qsci.qsci.statevector import as_scivector, SCIVector
 
 class QSCIPipeline:
     def __init__(

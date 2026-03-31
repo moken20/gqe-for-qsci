@@ -6,6 +6,7 @@ step_per_epoch: 30   # number of policy updates in each iteration
 warmup_size: 10
 buffer_size: 10      # buffer size should be equal to num_samples for online training
 load_checkpoint: true
+checkpoint_every_n_iters: 10
 optimizer: 
   lr: 5e-6
   cls: AdamW

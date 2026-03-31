@@ -13,15 +13,15 @@ class SmallConfig(GPT2Config):
 
 class GPT2Model(GPT2LMHeadModel, Policy):
     def __init__(self, small, repetition_penalty, vocab_size, ngates):
-        # +1 because training sequences include the initial BOS-like token.
         max_positions = int(ngates) + 1
         gpt2cfg = GPT2Config(vocab_size=vocab_size, n_positions=max_positions)
         if small:
             gpt2cfg = SmallConfig(vocab_size=vocab_size, n_positions=max_positions)
         self.repetition_penalty = repetition_penalty
         super().__init__(gpt2cfg)
+        self._tril_cache = {}
 
-    def log_prob(self, indices, temperature):
+    def log_prob(self, indices, temperature, return_entropy=False):
         """
         Compute next-token log-probabilities (and optionally entropies) under the same
         distribution as `act()` (i.e., includes repetition penalty + temperature).
@@ -52,7 +52,11 @@ class GPT2Model(GPT2LMHeadModel, Policy):
 
         log_probs = F.log_softmax(-temperature * logits, dim=-1)                  # (B, L-1, V)
         token_logp = torch.gather(log_probs, 2, labels.unsqueeze(-1)).squeeze(-1) # (B, L-1)
-        return token_logp
+        if return_entropy:
+            entropy = -(log_probs.exp() * log_probs).sum(dim=-1)                  # (B, L-1)
+            return token_logp, entropy
+        else:
+            return token_logp
 
     def act(self, state, temperature):
         """
@@ -71,7 +75,7 @@ class GPT2Model(GPT2LMHeadModel, Policy):
         state["past_key_values"] = out.past_key_values
         logits = out.logits[:, -1, :]  # (B, V)
         if self.repetition_penalty is not None and self.repetition_penalty > 1.0:
-            logits = self._apply_repetition_penalty(
+            logits = self._apply_repetition_penalty_last(
                 logits=logits,
                 input_ids=idx,
                 repetition_penalty=float(self.repetition_penalty),
@@ -80,7 +84,8 @@ class GPT2Model(GPT2LMHeadModel, Policy):
         next_token = probs.sample()
         return next_token
 
-    def _apply_repetition_penalty(logits, input_ids, repetition_penalty: float):
+    @staticmethod
+    def _apply_repetition_penalty_last(logits, input_ids, repetition_penalty: float):
         """
         Last-step variant (updates logits via scatter).
         logits: (B, V)
@@ -94,3 +99,50 @@ class GPT2Model(GPT2LMHeadModel, Policy):
         )
         # scatter returns a new tensor (functional-style), so this is safe.
         return logits.scatter(1, input_ids, updated)
+
+    def _get_tril_indices(self, S: int, device: torch.device):
+        """
+        tril indices (ti, sj) with sj <= ti, cached.
+        S: sequence length (time steps in logits)
+        """
+        key = (S, device.type, device.index if device.type == "cuda" else -1)
+        cached = self._tril_cache.get(key)
+        if cached is not None:
+            return cached
+        # offset=0 includes the diagonal (prefix at step t includes positions 0..t).
+        ti, sj = torch.tril_indices(S, S, offset=0, device=device)
+        self._tril_cache[key] = (ti, sj)
+        return ti, sj
+
+    def _apply_repetition_penalty_sequence(self, logits, prefix_ids, repetition_penalty: float):
+        """
+        Fast repetition-penalty application across all time steps (no Python loop).
+
+        logits:     (B, S, V) where S = L-1 (number of next-token prediction steps)
+        prefix_ids: (B, S) tokens in the prefix per step (penalize tokens in positions 0..t)
+        """
+        B, S, V = logits.shape
+        device = logits.device
+
+        ti, sj = self._get_tril_indices(S, device)     # (M,), (M,),  M = S(S+1)/2
+
+        # Select which "row" (b*S + t) in the flattened logits to update.
+        batch_offsets = (torch.arange(B, device=device) * S).unsqueeze(1)  # (B, 1)
+        rows = (batch_offsets + ti.unsqueeze(0)).reshape(-1)              # (B*M,)
+
+        # Select which token id to penalize (prefix position s).
+        cols = prefix_ids[:, sj].reshape(-1)                               # (B*M,)
+
+        flat = logits.reshape(B * S, V)                                    # (B*S, V)
+
+        # Gather target elements and compute their updated values.
+        vals = flat[rows, cols]                                            # (B*M,)
+        updated = torch.where(
+            vals < 0,
+            vals / repetition_penalty,
+            vals * repetition_penalty,
+        )
+        out = flat.clone()
+        out.index_put_((rows, cols), updated, accumulate=False)
+
+        return out.view(B, S, V)

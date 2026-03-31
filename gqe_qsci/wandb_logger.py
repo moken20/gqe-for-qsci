@@ -1,3 +1,4 @@
+from functools import singledispatch
 from typing import Any, Mapping
 
 import numpy as np
@@ -46,11 +47,16 @@ def _(result: QSCISampleResult, *, prefix: str = "", ref_energy: dict[str, float
             d[_prefix_key(f"energy - {ref_key}", prefix)] = result.energy - ref_val
     else:
         d[_prefix_key("energy", prefix)] = result.energy
-    d[_prefix_key("subspace_dim", prefix)] = result.subspace_dim
-    d[_prefix_key("num_sampled_basis", prefix)] = result.num_sampled_basis
-    d[_prefix_key("num_symmetry_preserving_basis", prefix)] = result.num_symmetry_preserving_basis
-    d[_prefix_key("cx_count", prefix)] = result.cx_count
-    d[_prefix_key("total_gates", prefix)] = result.total_gates
+    if result.subspace_dim is not None:
+        d[_prefix_key("subspace_dim", prefix)] = result.subspace_dim
+    if result.num_sampled_basis is not None:
+        d[_prefix_key("num_sampled_basis", prefix)] = result.num_sampled_basis
+    if result.num_symmetry_preserving_basis is not None:
+        d[_prefix_key("num_symmetry_preserving_basis", prefix)] = result.num_symmetry_preserving_basis
+    if result.cx_count is not None:
+        d[_prefix_key("cx_count", prefix)] = result.cx_count
+    if result.total_gates is not None:
+        d[_prefix_key("total_gates", prefix)] = result.total_gates
     return d
 
 
