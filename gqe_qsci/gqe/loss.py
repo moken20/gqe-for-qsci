@@ -82,9 +82,9 @@ class GSPOLoss(GroupRelativeLoss):
         current_seq_log_probs = current_token_log_probs.sum(dim=1)
 
         # nagative log likelihood loss
-        topk = torch.topk(-context["energies"], k=self.nll_topk).indices
-        w = torch.softmax(-context["energies"][topk], dim=0).detach()
-        loss = -(w[:, None] * current_token_log_probs[topk]).mean()
+        win_id = torch.argmin(context["energies"])
+        log_prob_mean_win = torch.mean(current_token_log_probs[win_id])
+        loss = -log_prob_mean_win
 
         # If all the generated circuits are identical, we use the inverse log probability as the loss.
         if torch.std(context["energies"]) == 0:
