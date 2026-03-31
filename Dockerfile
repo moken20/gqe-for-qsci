@@ -16,5 +16,5 @@ RUN python -m pip install --upgrade pip
 # Set the working directory
 WORKDIR /workspace
 
-COPY pyproject.toml .
-RUN pip install -e .
+COPY . .
+RUN pip install --no-cache-dir -e .
