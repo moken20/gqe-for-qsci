@@ -14,8 +14,18 @@ This repository’s `Dockerfile` is based on `ghcr.io/nvidia/cudaqx:0.4.0`.
 
 ### build
 
+For a CPU-only environment, build the image without specifying `TORCH_INDEX_URL`:
+
 ```bash
 docker build -t gqe_qsci .
+```
+
+For a GPU environment, specify the CUDA-enabled PyTorch index URL:
+
+```bash
+docker build \
+  --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cu128 \
+  -t gqe_qsci .
 ```
 
 ### run

@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Training/evaluation pipeline for GQE (Generative Quantum Eigensolver) + QSCI (Quantum Selective Configuration Interaction) on molecular Hamiltonians"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     {name = "Ryota Kemmoku"},
 ]
@@ -16,6 +16,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Physics",
@@ -23,23 +24,19 @@ classifiers = [
 ]
 dependencies = [
     "torch==2.9.1",
-    "pytorch-lightning==2.2.5",
+    "pytorch-lightning==2.6.1",
     "scipy~=1.15.3",
     "hydra-core==1.3.2",
     "omegaconf==2.3.0",
     "transformers==4.57.3",
-    "cudaq==0.14.0",
+    "cudaq==0.12.0",
     "qiskit==2.0.0",
     "wandb>=0.23.1",
     "tequila-basic==1.9.9",
     "pyscf==2.11.0",
     "ipykernel==6.30.0",
-    "qc-PyCI==0.6.3",
-]
-
-[project.optional-dependencies]
-gpu = [
     "mpi4py==3.1.6",
+    "qc-PyCI==0.6.3",
 ]
 
 [tool.hatch.build.targets.wheel]
