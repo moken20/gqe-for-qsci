@@ -1,4 +1,15 @@
-# --- replay buffer ---
+# ============================================================================ #
+# Copyright (c) 2025 NVIDIA Corporation & Affiliates.                          #
+# All rights reserved.                                                         #
+#                                                                              #
+# This source code and the accompanying materials are made available under     #
+# the terms of the Apache License 2.0 which accompanies this distribution.     #
+# ============================================================================ #
+# Modifications Copyright (c) 2026 Ryota Kemmoku
+# Modified from the original file in NVIDIA CUDA-QX.
+# Changes made: store `log_prob` in the replay buffer.
+
+
 from collections import deque
 import pickle
 import sys

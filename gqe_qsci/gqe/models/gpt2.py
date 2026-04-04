@@ -1,3 +1,15 @@
+# ============================================================================ #
+# Copyright (c) 2025 NVIDIA Corporation & Affiliates.                          #
+# All rights reserved.                                                         #
+#                                                                              #
+# This source code and the accompanying materials are made available under     #
+# the terms of the Apache License 2.0 which accompanies this distribution.     #
+# ============================================================================ #
+# Modifications Copyright (c) 2026 Ryota Kemmoku
+# Modified from the original file in NVIDIA CUDA-QX.
+# Changes made: added fast inference with KV cache and optimized repetition_penalty processing.
+
+
 from transformers import GPT2LMHeadModel, GPT2Config
 from torch.nn import functional as F
 from torch.distributions import Categorical

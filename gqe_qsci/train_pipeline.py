@@ -1,3 +1,15 @@
+# ============================================================================ #
+# Copyright (c) 2025 NVIDIA Corporation & Affiliates.                          #
+# All rights reserved.                                                         #
+#                                                                              #
+# This source code and the accompanying materials are made available under     #
+# the terms of the Apache License 2.0 which accompanies this distribution.     #
+# ============================================================================ #
+# Modifications Copyright (c) 2026 Ryota Kemmoku
+# Modified from the original file in NVIDIA CUDA-QX.
+# Changes made: add refinement post-processing and Weights & Biases logging.
+
+
 import torch
 import numpy as np
 from torch.utils.data import DataLoader

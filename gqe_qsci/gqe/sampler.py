@@ -1,5 +1,18 @@
+# ============================================================================ #
+# Copyright (c) 2025 NVIDIA Corporation & Affiliates.                          #
+# All rights reserved.                                                         #
+#                                                                              #
+# This source code and the accompanying materials are made available under     #
+# the terms of the Apache License 2.0 which accompanies this distribution.     #
+# ============================================================================ #
+# Modifications Copyright (c) 2026 Ryota Kemmoku
+# Modified from the original file in NVIDIA CUDA-QX.
+# Changes made: changed the simulation to use cudaq.sample.
+
+
+import torch
+import cudaq
 from mpi4py import MPI
-import torch, cudaq
 
 from gqe_qsci.gqe.operator_pool import OperatorPool
 
