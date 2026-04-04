@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --upgrade pip setuptools wheel && \
+RUN python3 -m pip install --upgrade pip "setuptools<82" wheel && \
     python3 -m pip install numpy scipy mpi4py
 
 RUN git clone https://github.com/theochem/pyci.git /tmp/pyci && \

@@ -35,7 +35,7 @@ dependencies = [
     "tequila-basic==1.9.9",
     "pyscf==2.11.0",
     "ipykernel==6.30.0",
-    "mpi4py==3.1.6",
+    "mpi4py==4.1.0",
     "qc-PyCI==0.6.3",
 ]
 
