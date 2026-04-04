@@ -1,4 +1,4 @@
-seed: 31
+seed: 32
 max_iters: 100
 num_samples: 10     # number of samples to generate in each iteration
 batch_size: 10       # batch size should be equal to num_samples for online training
