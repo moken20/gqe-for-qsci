@@ -36,7 +36,6 @@ dependencies = [
     "pyscf==2.11.0",
     "ipykernel==6.30.0",
     "mpi4py==4.1.0",
-    "qc-PyCI==0.6.3",
 ]
 
 [tool.hatch.build.targets.wheel]
