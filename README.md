@@ -4,6 +4,9 @@ Training pipeline for **GQE (Generative Quantum Eigensolver) + QSCI (Quantum-Sel
 The entrypoint is `train.py` (Hydra), and quantum-circuit sampling is performed with **CUDA-Q**.
 For more details, please refer to the full paper: Generative Circuit Design for Quantum-Selected Configuration Interaction.
 
+![Workflow](figs/workflow.jpg)
+
+
 ## Requirement
 - Python `>=3.10` (see `pyproject.toml`)
 - Docker is the recommended setup, using the provided `dockerfile` based on `ghcr.io/nvidia/cudaqx:0.4.0`
