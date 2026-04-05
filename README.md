@@ -11,7 +11,6 @@ For more details, please refer to the full paper: Generative Circuit Design for 
 - Python `>=3.10` (see `pyproject.toml`)
 - Docker is the recommended setup, using the provided `dockerfile` based on `ghcr.io/nvidia/cudaqx:0.4.0`
 - GPU acceleration requires an NVIDIA GPU with CUDA 12.8 support
-- CPU-only execution is also supported
 
 ## Installation (local)
 
