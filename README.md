@@ -2,6 +2,7 @@
 
 Training pipeline for **GQE (Generative Quantum Eigensolver) + QSCI (Quantum-Selected Configuration Interaction)** on molecular Hamiltonians.  
 The entrypoint is `train.py` (Hydra), and quantum-circuit sampling is performed with **CUDA-Q**.
+For more details, please refer to the full paper: Generative Circuit Design for Quantum-Selected Configuration Interaction.
 
 ## Requirement
 - Python `>=3.10` (see `pyproject.toml`)
