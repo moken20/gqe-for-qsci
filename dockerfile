@@ -35,5 +35,3 @@ RUN if [ -n "$TORCH_INDEX_URL" ]; then \
     else \
         python3 -m pip install -e .; \
     fi
-
-CMD ["/bin/bash"]
